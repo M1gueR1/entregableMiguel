@@ -1,14 +1,6 @@
-// ============================================================
-// API ROUTE: /api/profile/[username]
-// GET — returns profile + posts for a given username
-//
-// TODO (students): Replace mock lookup with real DB query.
-// ============================================================
-
 import { NextRequest, NextResponse } from "next/server";
 import { MOCK_POSTS, CURRENT_USER, CURRENT_USER_POSTS } from "@/lib/mock-data";
 
-// Simulate a user store — in a real app this comes from the DB
 const USER_STORE: Record<string, typeof CURRENT_USER> = {
   [CURRENT_USER.username]: CURRENT_USER,
 };
@@ -19,7 +11,6 @@ export async function GET(
 ) {
   const { username } = await params;
 
-  // TODO (students): Replace with: await prisma.user.findUnique({ where: { username }, include: { posts: true } })
   const user = USER_STORE[username] ?? {
     id: `u_${username}`,
     username,

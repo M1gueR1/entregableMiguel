@@ -1,19 +1,8 @@
-// ============================================================
-// API ROUTE: /api/reels
-// GET  — returns all reels
-// POST — creates a new reel
-//
-// TODO (students): Replace mock data with real DB queries.
-//   For video upload, students should integrate UploadThing
-//   on the client side first, then pass the video URL here.
-// ============================================================
-
 import { NextRequest, NextResponse } from "next/server";
 import { MOCK_REELS, CURRENT_USER } from "@/lib/mock-data";
 import { CreateReelPayload } from "@/lib/types";
 
 export async function GET() {
-  // TODO (students): Replace with: await prisma.reel.findMany({ include: { author: true }, orderBy: { createdAt: "desc" } })
   return NextResponse.json(MOCK_REELS);
 }
 
@@ -27,7 +16,6 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // TODO (students): Replace with a real DB insert
   const newReel = {
     id: `reel_${Date.now()}`,
     author: CURRENT_USER,
