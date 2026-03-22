@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 
-// In-memory store of followed usernames (mock — resets on server restart)
 const followedUsers = new Set<string>();
 
 export async function POST(

@@ -4,7 +4,6 @@ import { useState, useRef, useEffect } from "react";
 import { Conversation, DirectMessage } from "@/lib/types";
 import { CURRENT_USER } from "@/lib/mock-data";
 import { formatDistanceToNow } from "@/lib/utils";
-import { useToast } from "@/components/Toast";
 import { UploadButton } from "@/lib/uploadthing";
 
 import { toast } from "sonner";
@@ -18,7 +17,7 @@ export default function MessageThread({ initialConversation }: Props) {
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
-  const { showToast } = useToast();
+
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -49,7 +48,7 @@ export default function MessageThread({ initialConversation }: Props) {
       }),
     });
 
-    showToast("Mensaje enviado con éxito");
+    toast("Mensaje enviado con éxito");
     //toast("Mensaje enviado con éxito");
     
     setSending(false);
@@ -119,7 +118,7 @@ export default function MessageThread({ initialConversation }: Props) {
             }
           }}
           onUploadError={(err) => {
-            showToast(`Error: ${err.message}`);
+            toast(`Error: ${err.message}`);
           }}
           appearance={{
             button: "!bg-transparent !text-blue-500 hover:!text-blue-700 w-8 h-8 p-0",

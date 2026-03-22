@@ -3,7 +3,7 @@
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { CURRENT_USER } from "@/lib/mock-data";
-import { useToast } from "@/components/Toast";
+import { toast } from "sonner";
 import { uploadFiles } from "@/lib/uploadthing";
 
 export default function EditProfilePage() {
@@ -16,7 +16,6 @@ export default function EditProfilePage() {
   const [saved, setSaved] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const { showToast } = useToast();
   const [uploadedAvatarUrl, setUploadedAvatarUrl] = useState<string | null>(null);
 
   async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -40,7 +39,7 @@ export default function EditProfilePage() {
       console.error(error);
       alert("Error subiendo imagen");
     }
-    showToast("Imagen actualizada con éxito");
+    toast("Imagen actualizada con éxito");
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -64,7 +63,7 @@ export default function EditProfilePage() {
       }),
     });
 
-    showToast("Usuario actualizado con éxito");
+    toast("Usuario actualizado con éxito");
     setLoading(false);
     setTimeout(() => {
       router.push(`/profile/${CURRENT_USER.username}`);

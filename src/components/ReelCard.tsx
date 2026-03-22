@@ -4,50 +4,91 @@ import { useState } from "react";
 import Link from "next/link";
 import { Reel } from "@/lib/types";
 import { formatDistanceToNow } from "@/lib/utils";
-import { useToast } from "./Toast";
+import { toast } from "sonner";
 
 interface Props {
   reel: Reel;
 }
 
 export default function ReelCard({ reel }: Props) {
-  const { showToast } = useToast();
 
   const [isLiked, setIsLiked] = useState(reel.isLiked);
   const [likesCount, setLikesCount] = useState(reel.likesCount);
+  const [playing, setPlaying] = useState(false);
 
   async function handleLike() {
-    const wasLiked = isLiked;
+  const wasLiked = isLiked;
+  const nextLikedState = !wasLiked;
 
-    setIsLiked((v) => !v);
-    setLikesCount((v) => (isLiked ? v - 1 : v + 1));
-    // TODO (students): Call your real backend endpoint to like/unlike this reel
-    // Example: await fetch(`/api/reels/${reel.id}/like`, { method: "POST" })
-    await fetch(`/api/reels/${reel.id}/like`, { method: "POST" });
-    showToast(wasLiked ? "Se removió el like del reel" : "Se le puso like al reel con éxito");
-  }
+  // Actualización optimista del UI
+  setIsLiked(nextLikedState);
+  setLikesCount((count) => count + (nextLikedState ? 1 : -1));
+
+  // TODO (students): Call your real backend endpoint to like/unlike this reel
+  // Example: await fetch(`/api/reels/${reel.id}/like`, { method: "POST" })
+  await fetch(`/api/reels/${reel.id}/like`, { method: "POST" });
+
+  toast(
+    wasLiked
+      ? "Se quito el like del reel"
+      : "Se le puso like la reel"
+  );
+}
+
+  //funcion para demostrar la parte del bono de uploadThing 
+  function isVideoUrl(url: string): boolean {
+  const videoExtensions = ["mp4", "mov", "webm", "ogg"];
+  const videoHosts = ["ufs.sh", "utfs.io", "uploadthing"];
+
+  const hasVideoExtension = videoExtensions.some(ext =>
+    url.toLowerCase().includes(`.${ext}`)
+  );
+
+  const isFromVideoHost = videoHosts.some(host =>
+    url.toLowerCase().includes(host)
+  );
+
+  return hasVideoExtension || isFromVideoHost;
+}
 
   return (
     <div className="relative h-full w-full bg-black rounded-xl overflow-hidden snap-start flex-shrink-0" style={{ width: 320, height: 568 }}>
-      {/* Thumbnail / video placeholder */}
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={reel.thumbnailUrl}
-        alt={reel.caption}
-        className="absolute inset-0 w-full h-full object-cover"
-      />
+      {/* Se incluye esto del video para que se pueda demostrar el bono en upload thing*/}
+      {isVideoUrl(reel.videoUrl) ? (
+        <video
+          src={reel.videoUrl}
+          poster={reel.thumbnailUrl !== reel.videoUrl ? reel.thumbnailUrl : undefined}
+          className="absolute inset-0 w-full h-full object-cover"
+          loop
+          playsInline
+          onClick={(e) => {
+            const v = e.currentTarget;
+            v.paused ? v.play() : v.pause();
+            setPlaying(!playing);
+          }}
+        />
+      ) : (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={reel.thumbnailUrl}
+          alt={reel.caption}
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+      )}
 
       {/* Gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/20" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/20 pointer-events-none" />
 
-      {/* Play button hint */}
-      <div className="absolute inset-0 flex items-center justify-center opacity-60">
-        <div className="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
-          <svg viewBox="0 0 24 24" fill="white" className="w-7 h-7 ml-1">
-            <path d="M8 5v14l11-7z" />
-          </svg>
+      {/* Ícono de play visible solo cuando está pausado */}
+      {!playing && (
+        <div className="absolute inset-0 flex items-center justify-center opacity-60 pointer-events-none">
+          <div className="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
+            <svg viewBox="0 0 24 24" fill="white" className="w-7 h-7 ml-1">
+              <path d="M8 5v14l11-7z" />
+            </svg>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Right action bar */}
       <div className="absolute right-3 bottom-24 flex flex-col items-center gap-5">

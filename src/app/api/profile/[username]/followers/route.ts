@@ -7,9 +7,6 @@ export async function GET(
 ) {
   const { username } = await params;
 
-  // Return a mock list of followers for any user.
-  // For the current user, all mock users are "followers".
-  // For other users, return a subset of mock users.
   const followers =
     username === CURRENT_USER.username
       ? MOCK_USERS.map((u) => ({

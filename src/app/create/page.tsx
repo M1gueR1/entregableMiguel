@@ -4,12 +4,11 @@ import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useUploadThing } from "@/lib/uploadthing";
 import { uploadFiles } from "uploadthing/client-future";
-import { useToast } from "@/components/Toast";
+import { toast } from "sonner";
 
 type Tab = "post" | "reel";
 
 export default function CreatePage() {
-  const { showToast } = useToast();
 
   const router = useRouter();
   const [tab, setTab] = useState<Tab>("post");
@@ -47,18 +46,16 @@ export default function CreatePage() {
     setError(null);
 
     try {
-      const startUpload = tab === "post" ? startImageUpload : startVideoUpload;
-      const res = await startUpload([file]);
-      if (res?.[0]) {
-        setUploadedUrl(res[0].ufsUrl);
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Upload failed");
-      setPreview(null);
-    } finally {
-      setUploading(false);
-    }
+    const startUpload = tab === "post" ? startImageUpload : startVideoUpload;
+    const res = await startUpload([file]);
+    if (res?.[0]) setUploadedUrl(res[0].ufsUrl);
+  } catch (err) {
+    setError(err instanceof Error ? err.message : "Error subiendo el archivo");
+    setPreview(null);
+  } finally {
+    setUploading(false);
   }
+}
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -80,7 +77,9 @@ export default function CreatePage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ imageUrl: uploadedUrl, caption, location }),
         });
-        showToast("El post fue creado con éxito");
+        
+        toast("El post fue creado correctamente");
+
       } else {
         // TODO: Replace `preview` with the real URL returned by UploadThing after upload.
         // TODO: Change the URL below to your real backend endpoint.
@@ -93,7 +92,8 @@ export default function CreatePage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ videoUrl: uploadedUrl, thumbnailUrl: uploadedUrl, caption, audioTrack }),
         });
-        showToast("El reel fue creado con éxito");
+    
+        toast("El reel fue creado correctamente");
       }
 
       router.push("/");
@@ -162,9 +162,7 @@ export default function CreatePage() {
               <p className="text-xs">
                 {tab === "post" ? "JPEG, PNG, WEBP" : "MP4, MOV"}
               </p>
-              {/* TODO: Replace this area with <UploadDropzone> from @uploadthing/react */}
-
-              {/* Hecho*/}
+              
 
             </div>
           )}

@@ -5,6 +5,7 @@ import { Geist } from "next/font/google";
 import { cn } from "@/lib/utils";
 
 import { ToastProvider } from "@/components/Toast";
+import { Toaster } from "sonner";
 
 const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
@@ -21,13 +22,13 @@ export default function RootLayout({
   return (
     <html lang="en" className={cn("font-sans", geist.variable)}>
       <body className="bg-gray-50 text-gray-900 antialiased">
-        <ToastProvider>
+        <Toaster richColors position="top-right" />
         <Sidebar />
 
         <main className="lg:pl-64 min-h-screen pb-20 lg:pb-0">
           {children}
         </main>
-        </ToastProvider>
+        
       </body>
     </html>
   );

@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Post } from "@/lib/types";
 import { formatDistanceToNow } from "@/lib/utils";
-import { useToast } from "./Toast";
+import { toast } from "sonner";
 
 interface Props {
   post: Post;
@@ -12,7 +12,6 @@ interface Props {
 
 export default function PostCard({ post: initial }: Props) {
 
-  const { showToast } = useToast();
 
   const [post, setPost] = useState(initial);
   const [showAllComments, setShowAllComments] = useState(false);
@@ -33,7 +32,7 @@ export default function PostCard({ post: initial }: Props) {
     //hecho
 
     await fetch(`/api/posts/${post.id}/like`, { method: "POST" });
-    showToast(post.isLiked ? "Like removido" : "Post likeado con éxito");
+    toast(post.isLiked ? "Like removido" : "Post likeado con éxito");
 
   }
 
@@ -47,7 +46,7 @@ export default function PostCard({ post: initial }: Props) {
     // Example: fetch(`https://your-api.com/posts/${post.id}/save`, { method: "POST" })
     //hecho
     await fetch(`/api/posts/${post.id}/save`, { method: "POST" });
-    showToast(wasSaved ? "Post removido de guardados" : "Post guardado con éxito");
+    toast(wasSaved ? "Post removido de guardados" : "Post guardado con éxito");
   }
 
   async function handleComment(e: React.FormEvent) {
@@ -69,7 +68,7 @@ export default function PostCard({ post: initial }: Props) {
         commentsCount: p.commentsCount + 1,
       }));
       setCommentText("");
-      showToast("Comentario creado con éxito");
+      toast("Comentario creado");
     }
     setSubmittingComment(false);
   }

@@ -5,8 +5,7 @@ import { useParams } from "next/navigation";
 import { User, Post, Reel } from "@/lib/types";
 import { CURRENT_USER } from "@/lib/mock-data";
 import Link from "next/link";
-
-import { useToast } from "@/components/Toast";
+import { toast } from "sonner";
 
 interface FollowUser {
   id: string;
@@ -22,13 +21,9 @@ export default function ProfilePage() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
 
-
-  //para poder mostrar el toast cuando se le de al boton entonces agrego un showTost 
-  const { showToast } = useToast();
-
-  const [modalType, setModalType] = useState<"followers" | "following" | null>(null);
-  const [modalUsers, setModalUsers] = useState<FollowUser[]>([]);
-  const [modalLoading, setModalLoading] = useState(false);
+  const [tipoVentana, setTipoVentana] = useState<"seguidores" | "siguiendo" | null>(null);
+  const [usuariosVentana, setUsuariosVentana] = useState<FollowUser[]>([]);
+  const [cargandoVentana, setCargandoVentana] = useState(false);
 
   const [reelsLoaded, setReelsLoaded] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
@@ -41,70 +36,103 @@ export default function ProfilePage() {
   useEffect(() => {
     // TODO: Change the URL below to your real backend endpoint.
     // Example: fetch(`https://your-api.com/profile/${username}`)
-    //hecho 
+    //hecho
     const fetchProfile = async () => {
-    try {
-      const res = await fetch(`/api/profile/${username}`);
-      const data = await res.json();
+      try {
+        const res = await fetch(`/api/profile/${username}`);
+        const data = await res.json();
 
-      setUser(data.user);
-      setPosts(data.posts);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
-  };
+        setUser(data.user);
+        setPosts(data.posts);
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  fetchProfile();
-}, [username]);
+    fetchProfile();
+  }, [username]);
 
   if (loading) return <div className="flex justify-center py-20 text-gray-400">Loading profile…</div>;
   if (!user) return <div className="flex justify-center py-20 text-gray-400">User not found.</div>;
 
   //funcion relacionada al toDo del boton pal follow
   async function handleFollow() {
-    setFollowLoading(true);
+  setFollowLoading(true);
+
+  try {
+    const response = await fetch(`/api/profile/${username}/follow`, {
+      method: "POST",
+    });
+
+    if (!response.ok) {
+      throw new Error("Request failed");
+    }
+
+    const { isFollowing } = await response.json();
+
+    // Actualizar estado de follow
+    setIsFollowing(isFollowing);
+
+    // Actualizar usuario de forma segura
+    setUser((prevUser) => {
+      if (!prevUser) return prevUser;
+
+      const change = isFollowing ? 1 : -1;
+
+      return {
+        ...prevUser,
+        followersCount: Math.max(0, prevUser.followersCount + change),
+      };
+    });
+
+    toast.success(
+      isFollowing
+        ? `Ahora estás siguiendo a ${username}`
+        : `Dejaste de seguir a ${username}`
+    );
+  } catch (error) {
+    console.error(error);
+    toast.error("No se pudo actualizar el seguimiento. Intenta de nuevo.");
+  } finally {
+    setFollowLoading(false);
+  }
+}
+
+  async function abrirSeguidores() {
+    setTipoVentana("seguidores");
+    setCargandoVentana(true);
+    setUsuariosVentana([]);
     try {
-      const res = await fetch(`/api/profile/${username}/follow`, { method: "POST" });
+      const res = await fetch(`/api/profile/${username}/followers`);
       const data = await res.json();
-      setIsFollowing(data.isFollowing);
-      setUser((prev) =>
-        prev
-          ? {
-              ...prev,
-              followersCount: data.isFollowing
-                ? prev.followersCount + 1
-                : prev.followersCount - 1,
-            }
-          : prev
-      );
-      showToast(data.isFollowing ? `Ahora sigues a ${username}` : `Dejaste de seguir a ${username}`);
+      setUsuariosVentana(data);
     } catch {
-      showToast("Error al seguir/dejar de seguir");
+      toast.error("Error al cargar seguidores");
     } finally {
-      setFollowLoading(false);
+      setCargandoVentana(false);
     }
   }
 
-  async function openModal(type: "followers" | "following") {
-    setModalType(type);
-    setModalLoading(true);
-    setModalUsers([]);
+  async function abrirSiguiendo() {
+    setTipoVentana("siguiendo");
+    setCargandoVentana(true);
+    setUsuariosVentana([]);
     try {
-      const res = await fetch(`/api/profile/${username}/${type}`);
+      const res = await fetch(`/api/profile/${username}/following`);
       const data = await res.json();
-      setModalUsers(data);
+      setUsuariosVentana(data);
     } catch {
-      showToast(`Error al cargar ${type}`);
+      toast.error("Error al cargar siguiendo");
     } finally {
-      setModalLoading(false);
+      setCargandoVentana(false);
     }
   }
 
-  function closeModal() {
-    setModalType(null);
-    setModalUsers([]);
+  function cerrarVentana() {
+    setTipoVentana(null);
+    setUsuariosVentana([]);
   }
 
   function handleTabClick(tab: "posts" | "reels" | "saved") {
@@ -175,15 +203,15 @@ export default function ProfilePage() {
               <span className="font-semibold">{user.postsCount.toLocaleString()}</span>
               <span className="text-sm text-gray-500 ml-1">posts</span>
             </div>
-            <button className="hover:opacity-70" onClick={() => openModal("followers")}>
+            <button className="hover:opacity-70" onClick={abrirSeguidores}>
               {/* TODO: fetch("/api/profile/[username]/followers") */}
-              {/* hecho a medias: sale error */}
+
               <span className="font-semibold">{user.followersCount.toLocaleString()}</span>
               <span className="text-sm text-gray-500 ml-1">followers</span>
             </button>
-            <button className="hover:opacity-70" onClick={() => openModal("following")}>
+            <button className="hover:opacity-70" onClick={abrirSiguiendo}>
               {/* TODO: fetch("/api/profile/[username]/following") */}
-              {/* hecho a medias: sale error */}
+
               <span className="font-semibold">{user.followingCount.toLocaleString()}</span>
               <span className="text-sm text-gray-500 ml-1">following</span>
             </button>
@@ -204,16 +232,16 @@ export default function ProfilePage() {
       {/* Tabs */}
       <div className="border-t border-gray-200 flex justify-center gap-10 mb-6">
         <button
-            onClick={() => handleTabClick("posts")}
-            className={`flex items-center gap-1.5 py-3 text-xs font-semibold uppercase tracking-widest ${activeTab === "posts" ? "border-t-2 border-gray-900" : "text-gray-400"}`}
-          >
+          onClick={() => handleTabClick("posts")}
+          className={`flex items-center gap-1.5 py-3 text-xs font-semibold uppercase tracking-widest ${activeTab === "posts" ? "border-t-2 border-gray-900" : "text-gray-400"}`}
+        >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-4 h-4">
             <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
           </svg>
           Posts
         </button>
         {/* TODO: fetch(`/api/profile/${username}/reels`) on tab click */}
-        {/* hecho a medias: sale error */}
+
         <button
           onClick={() => handleTabClick("reels")}
           className={`flex items-center gap-1.5 py-3 text-xs font-semibold uppercase tracking-widest ${activeTab === "reels" ? "border-t-2 border-gray-900" : "text-gray-400"}`}
@@ -244,7 +272,7 @@ export default function ProfilePage() {
            Optionally show a hover overlay with likes/comments counts. */}
 
       {/* hecho */}
-      
+
       {activeTab === "posts" && (
         posts.length > 0 ? (
           <div className="grid grid-cols-3 gap-0.5">
@@ -324,35 +352,35 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* Followers / Following Modal */}
-      {modalType && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={closeModal}>
+      {/* Ventana de seguidores / siguiendo */}
+      {tipoVentana && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={cerrarVentana}>
           <div
             className="bg-white rounded-xl w-full max-w-sm mx-4 max-h-[70vh] flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Modal header */}
+            {/* Encabezado de la ventana */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
-              <h2 className="text-base font-semibold capitalize">{modalType}</h2>
-              <button onClick={closeModal} className="text-gray-500 hover:text-gray-800 text-xl leading-none">
+              <h2 className="text-base font-semibold capitalize">{tipoVentana}</h2>
+              <button onClick={cerrarVentana} className="text-gray-500 hover:text-gray-800 text-xl leading-none">
                 &times;
               </button>
             </div>
 
-            {/* Modal body */}
+            {/* Cuerpo de la ventana */}
             <div className="overflow-y-auto flex-1 px-4 py-2">
-              {modalLoading ? (
+              {cargandoVentana ? (
                 <div className="flex justify-center py-10 text-gray-400 text-sm">Loading…</div>
-              ) : modalUsers.length === 0 ? (
+              ) : usuariosVentana.length === 0 ? (
                 <div className="flex justify-center py-10 text-gray-400 text-sm">
-                  No {modalType} yet
+                  No {tipoVentana} yet
                 </div>
               ) : (
-                modalUsers.map((u) => (
+                usuariosVentana.map((u) => (
                   <Link
                     key={u.id}
                     href={`/profile/${u.username}`}
-                    onClick={closeModal}
+                    onClick={cerrarVentana}
                     className="flex items-center gap-3 py-2.5 hover:bg-gray-50 -mx-2 px-2 rounded-lg transition-colors"
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
