@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { MOCK_POSTS, MOCK_USERS } from "@/lib/mock-data";
+import { MOCK_POSTS, MOCK_USERS, CURRENT_USER } from "@/lib/mock-data";
 
 export async function POST(
   req: NextRequest,
@@ -20,7 +20,7 @@ export async function POST(
 
   const newComment = {
     id: `comment_${Date.now()}`,
-    author: MOCK_USERS[0],
+    author: CURRENT_USER,
     text: body.text,
     createdAt: new Date().toISOString(),
     likesCount: 0,
