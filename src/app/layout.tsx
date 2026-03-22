@@ -4,7 +4,6 @@ import Sidebar from "@/components/Sidebar";
 import { Geist } from "next/font/google";
 import { cn } from "@/lib/utils";
 
-import { ToastProvider } from "@/components/Toast";
 import { Toaster } from "sonner";
 
 const geist = Geist({subsets:['latin'],variable:'--font-sans'});
