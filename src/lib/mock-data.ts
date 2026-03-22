@@ -183,9 +183,11 @@ export let MOCK_REELS: Reel[] = Array.from({ length: 10 }, (_, i) => ({
 
 // ── Direct Messages / Conversations ──────────────────────────
 
+let convCounter = 0;
 function buildConversation(user: User, messages: { text: string; fromMe: boolean; minsAgo: number }[]): Conversation {
+  const idx = ++convCounter;
   const dms = messages.map((m, i) => ({
-    id: `msg_${user.id}_${i}`,
+    id: `msg_${user.id}_${idx}_${i}`,
     senderId: m.fromMe ? CURRENT_USER.id : user.id,
     text: m.text,
     createdAt: new Date(Date.now() - m.minsAgo * 60_000).toISOString(),
@@ -193,7 +195,7 @@ function buildConversation(user: User, messages: { text: string; fromMe: boolean
   }));
 
   return {
-    id: `conv_${user.id}`,
+    id: `conv_${user.id}_${idx}`,
     participant: user,
     messages: dms,
     lastMessage: dms[dms.length - 1],

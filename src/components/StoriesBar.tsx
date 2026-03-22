@@ -3,19 +3,38 @@
 // Stories bar — purely visual mock. Students can wire it to a real stories API.
 // TODO (students): Fetch real stories from your backend endpoint (e.g. GET /api/stories)
 
-const MOCK_STORIES = [
-  { username: "yourhandle", seed: "current", isOwn: true },
-  { username: "alex.photo", seed: "alex", isOwn: false },
-  { username: "maya.art", seed: "maya", isOwn: false },
-  { username: "javier.cooks", seed: "javier", isOwn: false },
-  { username: "sofia.travels", seed: "sofia", isOwn: false },
-  { username: "kai.fitness", seed: "kai", isOwn: false },
-];
+//hecho
+
+import { useEffect, useState } from "react";
+
+interface Story {
+  username: string;
+  avatar: string;
+  isOwn: boolean;
+}
 
 export default function StoriesBar() {
+  const [stories, setStories] = useState<Story[]>([]);
+
+  useEffect(() => {
+  const fetchStories = async () => {
+    try {
+      const res = await fetch("/api/stories");
+      const data = await res.json();
+      setStories(data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  fetchStories();
+}, []);
+
+  if (stories.length === 0) return null;
+
   return (
     <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide bg-white border border-gray-200 rounded-xl px-4 py-3">
-      {MOCK_STORIES.map(({ username, seed, isOwn }) => (
+      {stories.map(({ username, avatar, isOwn }) => (
         <button key={username} className="flex flex-col items-center gap-1 flex-shrink-0">
           <div
             className={`w-14 h-14 rounded-full p-0.5 ${
@@ -25,7 +44,7 @@ export default function StoriesBar() {
             <div className="w-full h-full rounded-full border-2 border-white overflow-hidden">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={`https://api.dicebear.com/8.x/notionists/svg?seed=${seed}`}
+                src={avatar}
                 alt={username}
                 className="w-full h-full object-cover"
               />

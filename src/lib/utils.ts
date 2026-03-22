@@ -1,3 +1,6 @@
+import { clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
+
 export function formatDistanceToNow(dateString: string): string {
   const now = Date.now();
   const date = new Date(dateString).getTime();
@@ -11,4 +14,10 @@ export function formatDistanceToNow(dateString: string): string {
   if (diffHours < 24) return `${diffHours}h ago`;
   if (diffDays < 7) return `${diffDays}d ago`;
   return new Date(dateString).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
+
+
+export function cn(...inputs: any[]) {
+  return twMerge(clsx(inputs));
 }

@@ -3,6 +3,8 @@
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { CURRENT_USER } from "@/lib/mock-data";
+import { useToast } from "@/components/Toast";
+import { uploadFiles } from "@/lib/uploadthing";
 
 export default function EditProfilePage() {
   const router = useRouter();
@@ -14,7 +16,10 @@ export default function EditProfilePage() {
   const [saved, setSaved] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
+  const { showToast } = useToast();
+  const [uploadedAvatarUrl, setUploadedAvatarUrl] = useState<string | null>(null);
+
+  async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
     setAvatarPreview(URL.createObjectURL(file));
@@ -23,6 +28,19 @@ export default function EditProfilePage() {
     // Example:
     //   const [result] = await uploadFiles("imageUploader", { files: [file] });
     //   setUploadedAvatarUrl(result.url);
+
+    //hecho
+
+    try {
+      const [result] = await uploadFiles("imageUploader", {
+        files: [file],
+      });
+      setUploadedAvatarUrl(result.url);
+    } catch (error) {
+      console.error(error);
+      alert("Error subiendo imagen");
+    }
+    showToast("Imagen actualizada con éxito");
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -32,13 +50,21 @@ export default function EditProfilePage() {
     // TODO: Replace the URL below with your real backend endpoint.
     // Also pass `avatarUrl` from UploadThing once you integrate file uploads.
     // Example: fetch("https://your-api.com/profile", { method: "POST", ... })
+
+    //hecho
+
     await fetch("/api/profile", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, bio, website }),
+      body: JSON.stringify({
+        name,
+        bio,
+        website,
+        avatarUrl: uploadedAvatarUrl ?? undefined,
+      }),
     });
 
-    setSaved(true);
+    showToast("Usuario actualizado con éxito");
     setLoading(false);
     setTimeout(() => {
       router.push(`/profile/${CURRENT_USER.username}`);

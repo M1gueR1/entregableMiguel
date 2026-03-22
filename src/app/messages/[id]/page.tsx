@@ -17,6 +17,7 @@ export default function MessageThreadPage() {
     // Example:
     //   fetch(`https://your-api.com/messages/${id}`)
     //   fetch("https://your-api.com/messages")
+    //xd creo que ya venia hecho por default 
     Promise.all([
       fetch(`/api/messages/${id}`).then((res) => res.json()),
       fetch("/api/messages").then((res) => res.json()),

@@ -2,10 +2,15 @@
 
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { useUploadThing } from "@/lib/uploadthing";
+import { uploadFiles } from "uploadthing/client-future";
+import { useToast } from "@/components/Toast";
 
 type Tab = "post" | "reel";
 
 export default function CreatePage() {
+  const { showToast } = useToast();
+
   const router = useRouter();
   const [tab, setTab] = useState<Tab>("post");
   const [preview, setPreview] = useState<string | null>(null);
@@ -16,7 +21,13 @@ export default function CreatePage() {
   const [error, setError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+  const [uploading, setUploading] = useState(false);
+  const [uploadedUrl, setUploadedUrl] = useState<string | null>(null);
+
+  const { startUpload: startImageUpload } = useUploadThing("imageUploader");
+  const { startUpload: startVideoUpload } = useUploadThing("videoUploader");
+
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
     // Show a local preview so the user can see what they picked
@@ -28,6 +39,25 @@ export default function CreatePage() {
     // 3. Upload and save the URL:
     //      const [result] = await uploadFiles("imageUploader", { files: [file] });
     //      setUploadedUrl(result.url);
+
+    //hecho
+
+    setUploadedUrl(null);
+    setUploading(true);
+    setError(null);
+
+    try {
+      const startUpload = tab === "post" ? startImageUpload : startVideoUpload;
+      const res = await startUpload([file]);
+      if (res?.[0]) {
+        setUploadedUrl(res[0].ufsUrl);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Upload failed");
+      setPreview(null);
+    } finally {
+      setUploading(false);
+    }
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -42,20 +72,28 @@ export default function CreatePage() {
         // TODO: Replace `preview` with the real URL returned by UploadThing after upload.
         // TODO: Change the URL below to your real backend endpoint.
         // Example: fetch("https://your-api.com/posts", { method: "POST", ... })
+
+        //HECHO
+
         await fetch("/api/posts", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ imageUrl: preview, caption, location }),
+          body: JSON.stringify({ imageUrl: uploadedUrl, caption, location }),
         });
+        showToast("El post fue creado con éxito");
       } else {
         // TODO: Replace `preview` with the real URL returned by UploadThing after upload.
         // TODO: Change the URL below to your real backend endpoint.
         // Example: fetch("https://your-api.com/reels", { method: "POST", ... })
+
+        //hecho
+
         await fetch("/api/reels", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ videoUrl: preview, thumbnailUrl: preview, caption, audioTrack }),
+          body: JSON.stringify({ videoUrl: uploadedUrl, thumbnailUrl: uploadedUrl, caption, audioTrack }),
         });
+        showToast("El reel fue creado con éxito");
       }
 
       router.push("/");
@@ -89,16 +127,32 @@ export default function CreatePage() {
       <form onSubmit={handleSubmit} className="flex flex-col gap-5">
         {/* File picker */}
         <div
-          onClick={() => fileRef.current?.click()}
-          className="border-2 border-dashed border-gray-300 rounded-xl aspect-square flex flex-col items-center justify-center cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-colors overflow-hidden"
+          onClick={() => !uploading && fileRef.current?.click()}
+          className="border-2 border-dashed border-gray-300 rounded-xl aspect-square flex flex-col items-center justify-center cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-colors overflow-hidden relative"
         >
           {preview ? (
-            tab === "post" ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={preview} alt="preview" className="w-full h-full object-cover" />
-            ) : (
-              <video src={preview} className="w-full h-full object-cover" muted loop autoPlay playsInline />
-            )
+            <>
+              {tab === "post" ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={preview} alt="preview" className="w-full h-full object-cover" />
+              ) : (
+                <video src={preview} className="w-full h-full object-cover" muted loop autoPlay playsInline />
+              )}
+              {uploading && (
+                <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                  <div className="text-white text-sm font-semibold">Uploading…</div>
+                </div>
+              )}
+              {!uploading && (
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); setPreview(null); setUploadedUrl(null); }}
+                  className="absolute top-2 right-2 bg-black/60 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm hover:bg-black/80"
+                >
+                  ✕
+                </button>
+              )}
+            </>
           ) : (
             <div className="flex flex-col items-center gap-3 text-gray-400 p-8 text-center">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-12 h-12">
@@ -109,6 +163,9 @@ export default function CreatePage() {
                 {tab === "post" ? "JPEG, PNG, WEBP" : "MP4, MOV"}
               </p>
               {/* TODO: Replace this area with <UploadDropzone> from @uploadthing/react */}
+
+              {/* Hecho*/}
+
             </div>
           )}
         </div>
