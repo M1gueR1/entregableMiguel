@@ -48,7 +48,7 @@ export default function MessageThread({ initialConversation }: Props) {
       }),
     });
 
-    toast("Mensaje enviado con éxito");
+    toast("El mensaje se envio");
 
     
     setSending(false);
@@ -114,7 +114,7 @@ export default function MessageThread({ initialConversation }: Props) {
           endpoint="imageUploader"
           onClientUploadComplete={(res) => {
             if (res?.[0]) {
-              sendMessage("Sent a photo", res[0].ufsUrl);
+              sendMessage("Foto enviada", res[0].ufsUrl);
             }
           }}
           onUploadError={(err) => {

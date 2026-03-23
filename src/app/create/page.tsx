@@ -78,7 +78,7 @@ export default function CreatePage() {
           body: JSON.stringify({ imageUrl: uploadedUrl, caption, location }),
         });
         
-        toast("El post fue creado correctamente");
+        toast("El post fue publicado");
 
       } else {
         // TODO: Replace `preview` with the real URL returned by UploadThing after upload.
@@ -93,7 +93,7 @@ export default function CreatePage() {
           body: JSON.stringify({ videoUrl: uploadedUrl, thumbnailUrl: uploadedUrl, caption, audioTrack }),
         });
     
-        toast("El reel fue creado correctamente");
+        toast("El reel fue publicado");
       }
 
       router.push("/");

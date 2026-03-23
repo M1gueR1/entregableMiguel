@@ -33,7 +33,7 @@ async function handleLike() {
     //hecho
 
     await fetch(`/api/posts/${post.id}/like`, { method: "POST" });
-    toast(post.isLiked ? "Like removido" : "Post likeado con éxito");
+    toast(post.isLiked ? "Se quito el like" : "Se puso like al post");
 
   }
 
@@ -47,7 +47,7 @@ async function handleLike() {
     // Example: fetch(`https://your-api.com/posts/${post.id}/save`, { method: "POST" })
     //hecho
     await fetch(`/api/posts/${post.id}/save`, { method: "POST" });
-    toast(wasSaved ? "Post removido de guardados" : "Post guardado con éxito");
+    toast(wasSaved ? "Se quita de guardados" : "Se guardo el post");
   }
 //esta funcion se usa para cumplir el toDo de los comentarios de abajo
   async function submitComment() {
