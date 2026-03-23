@@ -18,7 +18,6 @@ interface Story {
 export default function StoriesBar() {
   const [stories, setStories] = useState<Story[]>([]);
   const [historiaActiva, setHistoriaActiva] = useState<Story | null>(null);
-  const [progreso, setProgreso] = useState(0);
 
   useEffect(() => {
     const fetchStories = async () => {
@@ -34,27 +33,9 @@ export default function StoriesBar() {
     fetchStories();
   }, []);
 
-  useEffect(() => {
-    if (!historiaActiva) return;
-    setProgreso(0);
-    const interval = setInterval(() => {
-      setProgreso((prev) => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          setHistoriaActiva(null);
-          return 0;
-        }
-        return prev + 2;
-      });
-    }, 100);
-    return () => clearInterval(interval);
-  }, [historiaActiva]);
-
-  if (stories.length === 0) return null;
-
   function abrirHistoria(story: Story) {
     if (story.isOwn) {
-      toast.info("Selecciona una imagen desde Crear para agregar a tu historia");
+      toast.info("Historia propia");
     } else {
       setHistoriaActiva(story);
     }
@@ -104,42 +85,17 @@ export default function StoriesBar() {
       {/* Lo que esta aca abajo es para cumplir la parte del toDo que dice: Students can wire it to a real stories API. */}
         {/* Entonces lo que hace es renderizar la URL de la historia para mapearla y usarla */}
       {historiaActiva && (
-        <div
-          className="fixed inset-0 z-50 bg-black flex items-center justify-center"
-          onClick={cerrarHistoria}
-        >
-          <div
-            className="relative w-full max-w-sm h-[80vh] rounded-xl overflow-hidden"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="absolute top-0 left-0 right-0 z-10 px-3 pt-3">
-              <div className="h-0.5 bg-white/30 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-white rounded-full transition-all duration-100"
-                  style={{ width: `${progreso}%` }}
-                />
-              </div>
-            </div>
-
-            <div className="absolute top-4 left-0 right-0 z-10 flex items-center gap-3 px-4 pt-2">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={historiaActiva.avatar}
-                alt={historiaActiva.username}
-                className="w-8 h-8 rounded-full object-cover border-2 border-white"
-              />
+        <div className="fixed inset-0 z-50 bg-black flex items-center justify-center" onClick={cerrarHistoria}>
+          <div className="relative w-full max-w-sm h-[80vh] rounded-xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            <div className="absolute top-0 left-0 right-0 z-10 flex items-center gap-3 px-4 pt-4">
+              <img src={historiaActiva.avatar} alt={historiaActiva.username} className="w-8 h-8 rounded-full object-cover border-2 border-white" />
               <span className="text-white font-semibold text-sm">{historiaActiva.username}</span>
               <button onClick={cerrarHistoria} className="ml-auto text-white text-xl">&times;</button>
             </div>
-
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={historiaActiva.storyUrl!}
-              alt={`${historiaActiva.username}'s story`}
-              className="w-full h-full object-cover"
-            />
+            <img src={historiaActiva.storyUrl!} alt={`${historiaActiva.username}`} className="w-full h-full object-cover" />
           </div>
         </div>
+
       )}
     </>
   );

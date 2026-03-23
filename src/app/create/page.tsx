@@ -3,7 +3,7 @@
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useUploadThing } from "@/lib/uploadthing";
-import { uploadFiles } from "uploadthing/client-future";
+import { UploadDropzone } from "@/lib/uploadthing";
 import { toast } from "sonner";
 
 type Tab = "post" | "reel";
@@ -114,7 +114,7 @@ export default function CreatePage() {
         {(["post", "reel"] as Tab[]).map((t) => (
           <button
             key={t}
-            onClick={() => { setTab(t); setPreview(null); }}
+            onClick={() => { setTab(t); setPreview(null); setUploadedUrl(null); }}
             className={`flex-1 py-2 rounded-lg text-sm font-semibold capitalize transition-colors ${
               tab === t ? "bg-white shadow-sm" : "text-gray-500 hover:text-gray-700"
             }`}
@@ -126,47 +126,61 @@ export default function CreatePage() {
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-5">
         {/* File picker */}
-        <div
-          onClick={() => !uploading && fileRef.current?.click()}
-          className="border-2 border-dashed border-gray-300 rounded-xl aspect-square flex flex-col items-center justify-center cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-colors overflow-hidden relative"
-        >
-          {preview ? (
-            <>
-              {tab === "post" ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={preview} alt="preview" className="w-full h-full object-cover" />
-              ) : (
-                <video src={preview} className="w-full h-full object-cover" muted loop autoPlay playsInline />
-              )}
-              {uploading && (
-                <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                  <div className="text-white text-sm font-semibold">Uploading…</div>
-                </div>
-              )}
-              {!uploading && (
-                <button
-                  type="button"
-                  onClick={(e) => { e.stopPropagation(); setPreview(null); setUploadedUrl(null); }}
-                  className="absolute top-2 right-2 bg-black/60 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm hover:bg-black/80"
-                >
-                  ✕
-                </button>
-              )}
-            </>
-          ) : (
-            <div className="flex flex-col items-center gap-3 text-gray-400 p-8 text-center">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-12 h-12">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
-              </svg>
-              <p className="font-semibold text-sm">Click to select a file</p>
-              <p className="text-xs">
-                {tab === "post" ? "JPEG, PNG, WEBP" : "MP4, MOV"}
-              </p>
-              
-
-            </div>
-          )}
-        </div>
+        {preview ? (
+          <div className="border-2 border-dashed border-gray-300 rounded-xl aspect-square flex flex-col items-center justify-center overflow-hidden relative">
+            {tab === "post" ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={preview} alt="preview" className="w-full h-full object-cover" />
+            ) : (
+              <video src={preview} className="w-full h-full object-cover" muted loop autoPlay playsInline />
+            )}
+            {uploading && (
+              <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                <div className="text-white text-sm font-semibold">Uploading…</div>
+              </div>
+            )}
+            {!uploading && (
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); setPreview(null); setUploadedUrl(null); }}
+                className="absolute top-2 right-2 bg-black/60 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm hover:bg-black/80"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+        ) : (
+          // TODO: Replace this area with <UploadDropzone> from @uploadthing/react
+          
+          <UploadDropzone
+              appearance={{
+                container: "border-2 border-dashed border-gray-300 rounded-xl aspect-square flex flex-col items-center justify-center cursor-pointer hover:border-blue-300 hover:bg-blue-50/60 transition-colors",
+                button: "bg-gray-800 text-white text-sm font-semibold px-4 py-2 rounded-lg hover:bg-gray-900 transition-colors ut-uploading:bg-gray-700",
+                label: "text-gray-500 font-semibold text-sm",
+                allowedContent: "text-gray-400 text-xs",
+              }}
+              config={{ mode: "auto" }}
+              endpoint={tab === "post" ? "imageUploader" : "videoUploader"}
+              content={{ allowedContent: tab === "post" ? "JPEG, PNG, WEBP" : "MP4 o MOV" }}
+              onUploadError={(err) => {
+                setPreview(null);
+                setUploading(false);
+                setError(err instanceof Error ? err.message : "Upload failed");
+              }}
+              onClientUploadComplete={(res) => {
+                setUploading(false);
+                if (res?.[0]) {
+                  setUploadedUrl(res[0].ufsUrl);
+                  setPreview(res[0].ufsUrl);
+                }
+              }}
+              onUploadBegin={() => {
+                setError(null);
+                setUploading(true);
+              }}
+            />
+ 
+        )}
         <input
           ref={fileRef}
           type="file"
@@ -218,10 +232,10 @@ export default function CreatePage() {
 
         <button
           type="submit"
-          disabled={loading || !caption.trim() || !preview}
+          disabled={loading || uploading || !caption.trim() || !preview}
           className="w-full py-3 rounded-xl bg-blue-500 text-white font-semibold text-sm hover:bg-blue-600 transition-colors disabled:opacity-40"
         >
-          {loading ? "Sharing…" : `Share ${tab}`}
+          {loading ? "Sharing…" : uploading ? "Uploading file…" : `Share ${tab}`}
         </button>
       </form>
     </div>

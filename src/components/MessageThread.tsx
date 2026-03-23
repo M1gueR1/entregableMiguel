@@ -49,7 +49,7 @@ export default function MessageThread({ initialConversation }: Props) {
     });
 
     toast("Mensaje enviado con éxito");
-    //toast("Mensaje enviado con éxito");
+
     
     setSending(false);
   }

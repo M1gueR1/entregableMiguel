@@ -5,6 +5,33 @@ import { Post, User } from "@/lib/types";
 import PostCard from "@/components/PostCard";
 import StoriesBar from "@/components/StoriesBar";
 
+interface SuggestionItemProps {
+  avatar: string;
+  username: string;
+}
+
+//uso esta funcion para el toDo de suggestions 
+//osea para utilizar de una este componente alli 
+function SuggestionItem({ avatar, username }: SuggestionItemProps) {
+  return (
+    <div className="flex items-center gap-3 mb-3">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={avatar}
+        alt={username}
+        className="w-8 h-8 rounded-full object-cover"
+      />
+      <div className="flex-1 min-w-0">
+        <p className="text-xs font-semibold truncate">{username}</p>
+        <p className="text-xs text-gray-400">Suggested</p>
+      </div>
+      <button className="text-xs font-semibold text-blue-500 hover:text-blue-700">
+        Follow
+      </button>
+    </div>
+  );
+}
+
 export default function FeedPage() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
@@ -17,26 +44,26 @@ export default function FeedPage() {
     {/* hecho */}
     // Example: fetch("https://your-api.com/posts") d
     const fetchData = async () => {
-    try {
-      const [postsRes, suggestionsRes] = await Promise.all([
-        fetch("/api/posts"),
-        fetch("/api/suggestions"),
-      ]);
+      try {
+        const [postsRes, suggestionsRes] = await Promise.all([
+          fetch("/api/posts"),
+          fetch("/api/suggestions"),
+        ]);
 
-      const postsData = await postsRes.json();
-      const suggestionsData = await suggestionsRes.json();
+        const postsData = await postsRes.json();
+        const suggestionsData = await suggestionsRes.json();
 
-      setPosts(postsData);
-      setSuggestions(suggestionsData);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
-  };
+        setPosts(postsData);
+        setSuggestions(suggestionsData);
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  fetchData();
-}, []);
+    fetchData();
+  }, []);
 
   if (loading) return <div className="flex justify-center py-20 text-gray-400">Loading feed…</div>;
 
@@ -66,16 +93,8 @@ export default function FeedPage() {
           {/* TODO: Fetch suggestions from your backend — fetch("/api/suggestions") */}
           {/* hecho */}
           <p className="text-xs font-semibold text-gray-400 mb-3">Suggested for you</p>
-          {suggestions.map((usuarios) => (
-            <div key={usuarios.id} className="flex items-center gap-3 mb-3">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={usuarios.avatar} alt={usuarios.username} className="w-8 h-8 rounded-full object-cover" />
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-semibold truncate">{usuarios.username}</p>
-                <p className="text-xs text-gray-400">Suggested</p>
-              </div>
-              <button className="text-xs font-semibold text-blue-500 hover:text-blue-700">Follow</button>
-            </div>
+          {suggestions.map(({ id, avatar, username }) => (
+            <SuggestionItem key={id} avatar={avatar} username={username} />
           ))}
           <p className="text-xs text-gray-300 mt-4">© 2025 Fakestagram · Teaching Project</p>
         </div>
