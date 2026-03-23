@@ -6,6 +6,8 @@ import { User, Post, Reel } from "@/lib/types";
 import { CURRENT_USER } from "@/lib/mock-data";
 import Link from "next/link";
 import { toast } from "sonner";
+import ProfileGrid from "@/components/ProfileGrid";
+import FollowModal from "@/components/InterfazSeguidores";
 
 interface FollowUser {
   id: string;
@@ -32,6 +34,9 @@ export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState<"posts" | "reels" | "saved">("posts");
 
   const [reels, setReels] = useState<Reel[]>([]);
+
+  const [savedPosts, setSavedPosts] = useState<Post[]>([]);
+  const [savedLoaded, setSavedLoaded] = useState(false);
 
   useEffect(() => {
     // TODO: Change the URL below to your real backend endpoint.
@@ -145,6 +150,14 @@ export default function ProfilePage() {
           setReelsLoaded(true);
         });
     }
+    if (tab === "saved" && !savedLoaded) {
+    fetch(`/api/posts`)
+      .then((res) => res.json())
+      .then((data: Post[]) => {
+        setSavedPosts(data.filter((p) => p.isSaved));
+        setSavedLoaded(true);
+      });
+  }
   }
 
   const isOwn = username === CURRENT_USER.username;
@@ -273,40 +286,7 @@ export default function ProfilePage() {
 
       {/* hecho */}
 
-      {activeTab === "posts" && (
-        posts.length > 0 ? (
-          <div className="grid grid-cols-3 gap-0.5">
-            {posts.map((post) => (
-              <div key={post.id} className="relative aspect-square group cursor-pointer">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={post.imageUrl}
-                  alt={post.caption}
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-6 text-white font-semibold text-sm">
-                  <span className="flex items-center gap-1">
-                    <svg viewBox="0 0 24 24" fill="white" className="w-5 h-5">
-                      <path d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
-                    </svg>
-                    {post.likesCount}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <svg viewBox="0 0 24 24" fill="white" className="w-5 h-5">
-                      <path d="M12 20.25c4.97 0 9-3.694 9-8.25s-4.03-8.25-9-8.25S3 7.444 3 12c0 2.104.859 4.023 2.273 5.48.432.447.74 1.04.586 1.641a4.483 4.483 0 01-.923 1.785A5.969 5.969 0 006 21c1.282 0 2.47-.402 3.445-1.087.81.22 1.668.337 2.555.337z" />
-                    </svg>
-                    {post.commentsCount}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="flex flex-col items-center gap-3 py-16 text-gray-400">
-            <p className="font-semibold text-lg">No posts yet</p>
-          </div>
-        )
-      )}
+      {activeTab === "posts" && <ProfileGrid posts={posts} />}
 
       {/* Reels grid */}
       {activeTab === "reels" && (
@@ -345,67 +325,16 @@ export default function ProfilePage() {
         )
       )}
 
-      {/* Saved tab placeholder */}
-      {activeTab === "saved" && (
-        <div className="flex flex-col items-center gap-3 py-16 text-gray-400">
-          <p className="font-semibold text-lg">No saved posts</p>
-        </div>
-      )}
+      {activeTab === "saved" && <ProfileGrid posts={savedPosts} />}
 
-      {/* Ventana de seguidores / siguiendo */}
+      {/*se pone esta parte de forma adicional para que se pueda verificar que funciona los followers y following*/}
       {tipoVentana && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={cerrarVentana}>
-          <div
-            className="bg-white rounded-xl w-full max-w-sm mx-4 max-h-[70vh] flex flex-col"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Encabezado de la ventana */}
-            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
-              <h2 className="text-base font-semibold capitalize">{tipoVentana}</h2>
-              <button onClick={cerrarVentana} className="text-gray-500 hover:text-gray-800 text-xl leading-none">
-                &times;
-              </button>
-            </div>
-
-            {/* Cuerpo de la ventana */}
-            <div className="overflow-y-auto flex-1 px-4 py-2">
-              {cargandoVentana ? (
-                <div className="flex justify-center py-10 text-gray-400 text-sm">Loading…</div>
-              ) : usuariosVentana.length === 0 ? (
-                <div className="flex justify-center py-10 text-gray-400 text-sm">
-                  No {tipoVentana} yet
-                </div>
-              ) : (
-                usuariosVentana.map((u) => (
-                  <Link
-                    key={u.id}
-                    href={`/profile/${u.username}`}
-                    onClick={cerrarVentana}
-                    className="flex items-center gap-3 py-2.5 hover:bg-gray-50 -mx-2 px-2 rounded-lg transition-colors"
-                  >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={u.avatar}
-                      alt={u.username}
-                      className="w-10 h-10 rounded-full object-cover border border-gray-200"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1">
-                        <p className="text-sm font-semibold truncate">{u.username}</p>
-                        {u.isVerified && (
-                          <svg viewBox="0 0 24 24" fill="#3b82f6" className="w-3.5 h-3.5 flex-shrink-0">
-                            <path fillRule="evenodd" d="M8.603 3.799A4.49 4.49 0 0112 2.25c1.357 0 2.573.6 3.397 1.549a4.49 4.49 0 013.498 1.307 4.491 4.491 0 011.307 3.497A4.49 4.49 0 0121.75 12a4.49 4.49 0 01-1.549 3.397 4.491 4.491 0 01-1.307 3.497 4.491 4.491 0 01-3.497 1.307A4.49 4.49 0 0112 21.75a4.49 4.49 0 01-3.397-1.549 4.49 4.49 0 01-3.498-1.306 4.491 4.491 0 01-1.307-3.498A4.49 4.49 0 012.25 12c0-1.357.6-2.573 1.549-3.397a4.49 4.49 0 011.307-3.497 4.49 4.49 0 013.497-1.307zm7.007 6.387a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clipRule="evenodd" />
-                          </svg>
-                        )}
-                      </div>
-                      <p className="text-xs text-gray-400 truncate">{u.name}</p>
-                    </div>
-                  </Link>
-                ))
-              )}
-            </div>
-          </div>
-        </div>
+        <FollowModal
+          tipo={tipoVentana}
+          usuarios={usuariosVentana}
+          cargando={cargandoVentana}
+          onClose={cerrarVentana}
+        />
       )}
     </div>
   );
