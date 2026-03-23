@@ -8,12 +8,8 @@ export async function POST(
 ) {
   const { username } = await params;
 
-  const isNowFollowing = !followedUsers.has(username);
-  if (isNowFollowing) {
-    followedUsers.add(username);
-  } else {
-    followedUsers.delete(username);
-  }
+  const isFollowing = followedUsers.has(username);
+  followedUsers[isFollowing ? "delete" : "add"](username);
 
-  return NextResponse.json({ isFollowing: isNowFollowing });
+  return NextResponse.json({ isFollowing: !isFollowing });
 }
